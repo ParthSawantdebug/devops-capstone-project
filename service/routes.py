@@ -100,3 +100,59 @@ def check_content_type(media_type):
         status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
         f"Content-Type must be {media_type}",
     )
+
+
+######################################################################
+# LIST ALL ACCOUNTS
+######################################################################
+@app.route("/accounts", methods=["GET"])
+def list_accounts():
+    """Lists all Accounts"""
+    app.logger.info("Request to list Accounts")
+    accounts = Account.all()
+    results = [account.serialize() for account in accounts]
+    return make_response(jsonify(results), status.HTTP_200_OK)
+
+
+######################################################################
+# READ AN ACCOUNT
+######################################################################
+@app.route("/accounts/<int:account_id>", methods=["GET"])
+def read_account(account_id):
+    """Reads an Account"""
+    app.logger.info("Request to read an Account with id: %s", account_id)
+    account = Account.find(account_id)
+    if not account:
+        message = {"error": f"Account with id [{account_id}] could not be found."}
+        return make_response(jsonify(message), status.HTTP_404_NOT_FOUND)
+    return make_response(jsonify(account.serialize()), status.HTTP_200_OK)
+
+
+######################################################################
+# UPDATE AN EXISTING ACCOUNT
+######################################################################
+@app.route("/accounts/<int:account_id>", methods=["PUT"])
+def update_account(account_id):
+    """Updates an Account"""
+    app.logger.info("Request to update an Account with id: %s", account_id)
+    account = Account.find(account_id)
+    if not account:
+        message = {"error": f"Account with id [{account_id}] could not be found."}
+        return make_response(jsonify(message), status.HTTP_404_NOT_FOUND)
+    account.deserialize(request.get_json())
+    account.id = account_id
+    account.update()
+    return make_response(jsonify(account.serialize()), status.HTTP_200_OK)
+
+
+######################################################################
+# DELETE AN ACCOUNT
+######################################################################
+@app.route("/accounts/<int:account_id>", methods=["DELETE"])
+def delete_account(account_id):
+    """Deletes an Account"""
+    app.logger.info("Request to delete an Account with id: %s", account_id)
+    account = Account.find(account_id)
+    if account:
+        account.delete()
+    return make_response("", status.HTTP_204_NO_CONTENT)
